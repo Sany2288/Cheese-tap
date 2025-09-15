@@ -17,7 +17,7 @@
     width: 200px;
     cursor: pointer;
     margin-top: 40px;
-    transition: transform 0.1s;
+    transition: transform 0.1s, width 0.2s;
   }
   #cheese:active {
     transform: scale(0.9) rotate(-10deg);
@@ -46,7 +46,7 @@
 <h1>🧀 Cheese Combat</h1>
 <div id="score">Сир: 0</div>
 <div id="level">Рівень: 1</div>
-<img id="cheese" src="cheese.png" alt="Cheese">
+<img id="cheese" src="https://upload.wikimedia.org/wikipedia/commons/0/0b/Emmental_cheese.jpg" alt="Cheese">
 <br>
 <button id="sync">Синхронізувати</button>
 
@@ -61,43 +61,36 @@ let score = 0, multiplier = 1, farmers = 0, level = 1;
 const scoreDiv = document.getElementById("score");
 const levelDiv = document.getElementById("level");
 const cheese = document.getElementById("cheese");
-const syncBtn = document.getElementById("sync");
 
-// Telegram WebApp
-const tg = window.Telegram?.WebApp;
-let user = null;
-if (tg && tg.initDataUnsafe.user) user = tg.initDataUnsafe.user;
+// Картинки сиру
+const cheeseImages = {
+  normal: "https://upload.wikimedia.org/wikipedia/commons/0/0b/Emmental_cheese.jpg",
+  super1: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Cheddar_cheese.jpg",
+  super2: "https://upload.wikimedia.org/wikipedia/commons/4/42/Brie_cheese.jpg",
+  super3: "https://upload.wikimedia.org/wikipedia/commons/1/1b/Gouda_cheese.jpg"
+};
 
-// Завантажити стан гравця
-async function loadState() {
-  if (!user) return;
-  const res = await fetch("/player/" + user.id);
-  if (res.ok) {
-    const data = await res.json();
-    score = data.cheese || 0;
-    multiplier = data.multiplier || 1;
-    farmers = data.farmers || 0;
-    updateUI();
-  }
-}
-
+// Оновлення UI
 function updateUI() {
   scoreDiv.innerText = "Сир: " + score;
   level = Math.floor(score / 100) + 1;
   levelDiv.innerText = "Рівень: " + level;
 
-  // Рівні супер-сиру
-  if (score >= 100000) {
-    cheese.src = "cheese-super3.png";
+  // Рівні супер-сиру та розмір
+  if(score >= 100000){
+    cheese.src = cheeseImages.super3;
     cheese.style.width = `${200 + Math.floor(score/100000)*100}px`;
-  } else if (score >= 50000) {
-    cheese.src = "cheese-super2.png";
+    multiplier = Math.max(multiplier, 50);
+  } else if(score >= 50000){
+    cheese.src = cheeseImages.super2;
     cheese.style.width = `${200 + Math.floor(score/50000)*75}px`;
-  } else if (score >= 10000) {
-    cheese.src = "cheese-super1.png";
+    multiplier = Math.max(multiplier, 20);
+  } else if(score >= 10000){
+    cheese.src = cheeseImages.super1;
     cheese.style.width = `${200 + Math.floor(score/10000)*50}px`;
+    multiplier = Math.max(multiplier, 5);
   } else {
-    cheese.src = "cheese.png";
+    cheese.src = cheeseImages.normal;
     cheese.style.width = "200px";
   }
 }
@@ -112,34 +105,22 @@ cheese.addEventListener("click", () => {
 
 // Купівля апгрейдів
 document.getElementById("buyMultiplier").addEventListener("click", () => {
-  if(score >= 50) { score -= 50; multiplier++; updateUI(); }
+  if(score >= 50){ score -= 50; multiplier++; updateUI(); }
   else alert("Недостатньо сиру!");
 });
 
 document.getElementById("buyFarmer").addEventListener("click", () => {
-  if(score >= 100) { score -= 100; farmers++; updateUI(); }
+  if(score >= 100){ score -= 100; farmers++; updateUI(); }
   else alert("Недостатньо сиру!");
 });
 
 // Автофермер
-setInterval(() => { if(farmers>0){ score += farmers; updateUI(); } }, 1000);
+setInterval(()=>{ if(farmers>0){ score += farmers; updateUI(); } }, 1000);
 
 // Випадковий бонус
-setInterval(() => { let bonus = Math.floor(Math.random()*16)+5; score += bonus; updateUI(); }, 30000);
+setInterval(()=>{ let bonus = Math.floor(Math.random()*16)+5; score += bonus; updateUI(); }, 30000);
 
-// Синхронізація з сервером
-syncBtn.addEventListener("click", async () => {
-  if(!user){ alert("Відкрий через Telegram"); return; }
-  const res = await fetch("/update", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({user_id:user.id, username:user.username, cheese, multiplier, farmers})
-  });
-  const data = await res.json();
-  alert("Синхронізовано! Загалом: " + data.total);
-});
-
-loadState();
+updateUI();
 </script>
 </body>
 </html>
