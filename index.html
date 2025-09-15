@@ -20,13 +20,15 @@
     transition: transform 0.1s;
   }
   #cheese:active {
-    transform: scale(0.9);
+    transform: scale(0.9) rotate(-10deg);
   }
   #score, #level {
     font-size: 24px;
     margin: 10px;
   }
-  #upgrades { margin-top: 30px; }
+  #upgrades {
+    margin-top: 30px;
+  }
   button {
     padding: 10px 15px;
     margin: 5px;
@@ -37,7 +39,9 @@
     border: 1px solid #555;
     border-radius: 5px;
   }
-  button:hover { background: #333; }
+  button:hover {
+    background: #333;
+  }
 </style>
 </head>
 <body>
@@ -56,10 +60,10 @@
 
 <script>
 let score=0, multiplier=1, farmers=0, level=1;
-const scoreDiv=document.getElementById("score");
-const levelDiv=document.getElementById("level");
-const cheese=document.getElementById("cheese");
-const syncBtn=document.getElementById("sync");
+const scoreDiv = document.getElementById("score");
+const levelDiv = document.getElementById("level");
+const cheese = document.getElementById("cheese");
+const syncBtn = document.getElementById("sync");
 
 // Telegram WebApp
 const tg = window.Telegram?.WebApp;
@@ -67,61 +71,65 @@ let user = null;
 if (tg && tg.initDataUnsafe.user) user = tg.initDataUnsafe.user;
 
 // Завантажити стан гравця
-async function loadState(){
-  if(!user) return;
-  const res=await fetch("/player/"+user.id);
-  if(res.ok){
-    const data=await res.json();
-    score=data.cheese||0;
-    multiplier=data.multiplier||1;
-    farmers=data.farmers||0;
+async function loadState() {
+  if (!user) return;
+  const res = await fetch("/player/" + user.id);
+  if (res.ok) {
+    const data = await res.json();
+    score = data.cheese || 0;
+    multiplier = data.multiplier || 1;
+    farmers = data.farmers || 0;
     updateUI();
   }
 }
 
-function updateUI(){
-  scoreDiv.innerText="Сир: "+score;
-  level=Math.floor(score/100)+1;
-  levelDiv.innerText="Рівень: "+level;
+function updateUI() {
+  scoreDiv.innerText = "Сир: " + score;
+  level = Math.floor(score / 100) + 1;
+  levelDiv.innerText = "Рівень: " + level;
 }
 
-cheese.addEventListener("click", ()=>{
+// Натискання на сир
+cheese.addEventListener("click", () => {
   score += multiplier;
   updateUI();
+  cheese.style.transform = "scale(0.9) rotate(-10deg)";
+  setTimeout(()=>{ cheese.style.transform = "scale(1) rotate(0deg)"; }, 100);
 });
 
-document.getElementById("buyMultiplier").addEventListener("click", ()=>{
-  if(score>=50){ score-=50; multiplier++; updateUI(); } 
+// Купівля апгрейдів
+document.getElementById("buyMultiplier").addEventListener("click", () => {
+  if (score >= 50) { score -= 50; multiplier++; updateUI(); } 
   else alert("Недостатньо сиру!");
 });
 
-document.getElementById("buyFarmer").addEventListener("click", ()=>{
-  if(score>=100){ score-=100; farmers++; updateUI(); } 
+document.getElementById("buyFarmer").addEventListener("click", () => {
+  if (score >= 100) { score -= 100; farmers++; updateUI(); } 
   else alert("Недостатньо сиру!");
 });
 
 // Автофермер
-setInterval(()=>{
-  if(farmers>0){ score += farmers; updateUI(); }
+setInterval(() => {
+  if (farmers > 0) { score += farmers; updateUI(); }
 }, 1000);
 
 // Випадковий бонус
-setInterval(()=>{
-  let bonus = Math.floor(Math.random()*16)+5;
+setInterval(() => {
+  let bonus = Math.floor(Math.random() * 16) + 5;
   score += bonus;
   updateUI();
 }, 30000);
 
-// Синхронізація
-syncBtn.addEventListener("click", async()=>{
-  if(!user){ alert("Відкрий через Telegram"); return; }
-  const res = await fetch("/update",{
-    method:"POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({user_id:user.id, username:user.username, cheese, multiplier, farmers})
+// Синхронізація з сервером
+syncBtn.addEventListener("click", async () => {
+  if (!user) { alert("Відкрий через Telegram"); return; }
+  const res = await fetch("/update", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({user_id: user.id, username: user.username, cheese, multiplier, farmers})
   });
   const data = await res.json();
-  alert("Синхронізовано! Загалом: "+data.total);
+  alert("Синхронізовано! Загалом: " + data.total);
 });
 
 loadState();
