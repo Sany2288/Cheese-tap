@@ -1,1 +1,87 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>Cheese Combat</title>
+<style>
+body { font-family: Arial; text-align:center; background:#fffbe7; margin:0; padding:0; }
+#cheese { width:200px; cursor:pointer; margin-top:40px; transition:0.1s; }
+#cheese:active { transform:scale(0.9); }
+#score,#level { font-size:24px; margin:10px; }
+#upgrades{ margin-top:30px; }
+button { padding:10px 15px; margin:5px; font-size:16px; cursor:pointer; }
+</style>
+</head>
+<body>
+<h1>🧀 Cheese Combat</h1>
+<div id="score">Сир: 0</div>
+<div id="level">Рівень: 1</div>
+<img id="cheese" src="https://i.ibb.co/7SN7r0Y/cheese.png">
+<br>
+<button id="sync">Синхронізувати</button>
 
+<h2>⚡ Апгрейди</h2>
+<div id="upgrades">
+  <button id="buyMultiplier">Купити множник (50)</button>
+  <button id="buyFarmer">Купити автофермера (100)</button>
+</div>
+
+<script>
+let score=0, multiplier=1, farmers=0, level=1;
+const scoreDiv=document.getElementById("score");
+const levelDiv=document.getElementById("level");
+const cheese=document.getElementById("cheese");
+const syncBtn=document.getElementById("sync");
+
+function updateUI(){
+  scoreDiv.innerText="Сир: "+score;
+  level=Math.floor(score/100)+1;
+  levelDiv.innerText="Рівень: "+level;
+}
+
+// Telegram WebApp
+const tg=window.Telegram?.WebApp;
+let user=null;
+if(tg && tg.initDataUnsafe.user) user=tg.initDataUnsafe.user;
+
+// Завантажити стан з сервера при відкритті
+async function loadState(){
+  if(!user) return;
+  const res=await fetch("/player/"+user.id);
+  if(res.ok){
+    const data=await res.json();
+    score=data.cheese||0;
+    multiplier=data.multiplier||1;
+    farmers=data.farmers||0;
+    updateUI();
+  }
+}
+loadState();
+
+cheese.addEventListener("click",()=>{ score+=multiplier; updateUI(); });
+
+document.getElementById("buyMultiplier").addEventListener("click",()=>{
+  if(score>=50){ score-=50; multiplier++; updateUI(); } else alert("Недостатньо сиру!");
+});
+document.getElementById("buyFarmer").addEventListener("click",()=>{
+  if(score>=100){ score-=100; farmers++; updateUI(); } else alert("Недостатньо сиру!");
+});
+
+// Автофермер
+setInterval(()=>{ if(farmers>0){ score+=farmers; updateUI(); } },1000);
+
+// Випадковий бонус
+setInterval(()=>{
+  let bonus=Math.floor(Math.random()*16)+5;
+  score+=bonus; updateUI();
+},30000);
+
+syncBtn.addEventListener("click", async()=>{
+  if(!user){ alert("Відкрий через Telegram"); return; }
+  const res=await fetch("/update",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({user_id:user.id,username:user.username,cheese:score,multiplier,farmers}) });
+  const data=await res.json();
+  alert("Синхронізовано! Загалом: "+data.total);
+});
+</script>
+</body>
+</html>
