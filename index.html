@@ -4,42 +4,42 @@
 <meta charset="UTF-8">
 <title>Cheese Combat</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    background: #000;
-    color: #fff;
-    margin: 0;
-    padding: 0;
-    user-select: none;
-  }
-  #cheese {
-    width: 200px;
-    cursor: pointer;
-    margin-top: 40px;
-    transition: transform 0.1s, width 0.2s;
-  }
-  #cheese:active {
-    transform: scale(0.9) rotate(-10deg);
-  }
-  #score, #level {
-    font-size: 24px;
-    margin: 10px;
-  }
-  #upgrades {
-    margin-top: 30px;
-  }
-  button {
-    padding: 10px 15px;
-    margin: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    background: #222;
-    color: #fff;
-    border: 1px solid #555;
-    border-radius: 5px;
-  }
-  button:hover { background: #333; }
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background: #000;
+  color: #fff;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+#cheese {
+  width: 200px;
+  cursor: pointer;
+  margin-top: 40px;
+  transition: transform 0.1s, width 0.2s;
+}
+#cheese:active {
+  transform: scale(0.9) rotate(-10deg);
+}
+#score, #level {
+  font-size: 24px;
+  margin: 10px;
+}
+#upgrades {
+  margin-top: 30px;
+}
+button {
+  padding: 10px 15px;
+  margin: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  background: #222;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 5px;
+}
+button:hover { background: #333; }
 </style>
 </head>
 <body>
@@ -62,7 +62,7 @@ const scoreDiv = document.getElementById("score");
 const levelDiv = document.getElementById("level");
 const cheese = document.getElementById("cheese");
 
-// Картинки сиру
+// Надійні онлайн-картинки сиру
 const cheeseImages = {
   normal: "https://upload.wikimedia.org/wikipedia/commons/0/0b/Emmental_cheese.jpg",
   super1: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Cheddar_cheese.jpg",
@@ -76,7 +76,6 @@ function updateUI() {
   level = Math.floor(score / 100) + 1;
   levelDiv.innerText = "Рівень: " + level;
 
-  // Рівні супер-сиру та розмір
   if(score >= 100000){
     cheese.src = cheeseImages.super3;
     cheese.style.width = `${200 + Math.floor(score/100000)*100}px`;
@@ -124,3 +123,4 @@ updateUI();
 </script>
 </body>
 </html>
+
