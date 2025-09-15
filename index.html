@@ -7,11 +7,11 @@
   body {
     font-family: Arial, sans-serif;
     text-align: center;
-    background: #000; /* чорний фон */
+    background: #000;
     color: #fff;
     margin: 0;
     padding: 0;
-    user-select: none; /* нічого не виділяється */
+    user-select: none;
   }
   #cheese {
     width: 200px;
@@ -39,9 +39,7 @@
     border: 1px solid #555;
     border-radius: 5px;
   }
-  button:hover {
-    background: #333;
-  }
+  button:hover { background: #333; }
 </style>
 </head>
 <body>
@@ -59,7 +57,7 @@
 </div>
 
 <script>
-let score=0, multiplier=1, farmers=0, level=1;
+let score = 0, multiplier = 1, farmers = 0, level = 1;
 const scoreDiv = document.getElementById("score");
 const levelDiv = document.getElementById("level");
 const cheese = document.getElementById("cheese");
@@ -87,6 +85,21 @@ function updateUI() {
   scoreDiv.innerText = "Сир: " + score;
   level = Math.floor(score / 100) + 1;
   levelDiv.innerText = "Рівень: " + level;
+
+  // Рівні супер-сиру
+  if (score >= 100000) {
+    cheese.src = "cheese-super3.png";
+    cheese.style.width = `${200 + Math.floor(score/100000)*100}px`;
+  } else if (score >= 50000) {
+    cheese.src = "cheese-super2.png";
+    cheese.style.width = `${200 + Math.floor(score/50000)*75}px`;
+  } else if (score >= 10000) {
+    cheese.src = "cheese-super1.png";
+    cheese.style.width = `${200 + Math.floor(score/10000)*50}px`;
+  } else {
+    cheese.src = "cheese.png";
+    cheese.style.width = "200px";
+  }
 }
 
 // Натискання на сир
@@ -99,34 +112,28 @@ cheese.addEventListener("click", () => {
 
 // Купівля апгрейдів
 document.getElementById("buyMultiplier").addEventListener("click", () => {
-  if (score >= 50) { score -= 50; multiplier++; updateUI(); } 
+  if(score >= 50) { score -= 50; multiplier++; updateUI(); }
   else alert("Недостатньо сиру!");
 });
 
 document.getElementById("buyFarmer").addEventListener("click", () => {
-  if (score >= 100) { score -= 100; farmers++; updateUI(); } 
+  if(score >= 100) { score -= 100; farmers++; updateUI(); }
   else alert("Недостатньо сиру!");
 });
 
 // Автофермер
-setInterval(() => {
-  if (farmers > 0) { score += farmers; updateUI(); }
-}, 1000);
+setInterval(() => { if(farmers>0){ score += farmers; updateUI(); } }, 1000);
 
 // Випадковий бонус
-setInterval(() => {
-  let bonus = Math.floor(Math.random() * 16) + 5;
-  score += bonus;
-  updateUI();
-}, 30000);
+setInterval(() => { let bonus = Math.floor(Math.random()*16)+5; score += bonus; updateUI(); }, 30000);
 
 // Синхронізація з сервером
 syncBtn.addEventListener("click", async () => {
-  if (!user) { alert("Відкрий через Telegram"); return; }
+  if(!user){ alert("Відкрий через Telegram"); return; }
   const res = await fetch("/update", {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({user_id: user.id, username: user.username, cheese, multiplier, farmers})
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({user_id:user.id, username:user.username, cheese, multiplier, farmers})
   });
   const data = await res.json();
   alert("Синхронізовано! Загалом: " + data.total);
