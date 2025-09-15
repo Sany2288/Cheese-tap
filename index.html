@@ -40,6 +40,16 @@ button {
   border-radius: 5px;
 }
 button:hover { background: #333; }
+
+/* Пульсування сиру */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+.pulse {
+  animation: pulse 0.5s ease;
+}
 </style>
 </head>
 <body>
@@ -48,8 +58,6 @@ button:hover { background: #333; }
 <div id="level">Рівень: 1</div>
 <img id="cheese" src="https://upload.wikimedia.org/wikipedia/commons/0/0b/Emmental_cheese.jpg" alt="Cheese">
 <br>
-<button id="sync">Синхронізувати</button>
-
 <h2>⚡ Апгрейди</h2>
 <div id="upgrades">
   <button id="buyMultiplier">Купити множник (50)</button>
@@ -98,8 +106,9 @@ function updateUI() {
 cheese.addEventListener("click", () => {
   score += multiplier;
   updateUI();
-  cheese.style.transform = "scale(0.9) rotate(-10deg)";
-  setTimeout(()=>{ cheese.style.transform = "scale(1) rotate(0deg)"; }, 100);
+  // Пульсування сиру
+  cheese.classList.add("pulse");
+  setTimeout(() => { cheese.classList.remove("pulse"); }, 500);
 });
 
 // Купівля апгрейдів
