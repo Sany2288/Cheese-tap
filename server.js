@@ -1,54 +1,46 @@
-# Cheese-tap
-require("dotenv").config();
-const express=require("express");
-const fs=require("fs");
-const bodyParser=require("body-parser");
-const bcrypt=require("bcrypt");
-const app=express();
-app.use(bodyParser.json());
-app.use(express.static("."));
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>Cheese Combat Admin</title>
+<style>
+body{ font-family:Arial; background:#f2f2f2; display:flex; justify-content:center; align-items:center; height:100vh; }
+.panel{ background:white; padding:20px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.2); width:350px; text-align:center; }
+input,button{ margin:10px 0; padding:10px; width:90%; }
+#topPlayers{ margin-top:20px; text-align:left; max-height:200px; overflow:auto; }
+</style>
+</head>
+<body>
+<div class="panel">
+<h2>🛠 Адмін-панель</h2>
+<input id="password" type="password" placeholder="Пароль">
+<input id="amount" type="number" placeholder="Кількість сиру (+/-)">
+<button id="addBtn">Змінити сир усім</button>
+<div id="result"></div>
+<h3>🏆 Топ 10 гравців</h3>
+<div id="topPlayers"></div>
+<button id="refreshTop">Оновити топ</button>
+</div>
 
-let dbFile="./db.json";
-let db={};
-if(fs.existsSync(dbFile)) db=JSON.parse(fs.readFileSync(dbFile));
+<script>
+async function fetchTop(){
+  const res=await fetch("/top");
+  const data=await res.json();
+  const topDiv=document.getElementById("topPlayers");
+  topDiv.innerHTML="";
+  data.slice(0,10).forEach((u,i)=>{ topDiv.innerHTML+=`${i+1}. ${u.username||"Anon"} — ${u.cheese} 🧀<br>`; });
+}
+document.getElementById("refreshTop").addEventListener("click", fetchTop);
+fetchTop();
 
-function saveDB(){ fs.writeFileSync(dbFile,JSON.stringify(db,null,2)); }
-
-// Оновлення даних гравця
-app.post("/update",(req,res)=>{
-  const {user_id,username,cheese,multiplier,farmers}=req.body;
-  if(!user_id) return res.status(400).send({error:"No user"});
-  if(!db[user_id]) db[user_id]={username,cheese:0,multiplier:1,farmers:0};
-  db[user_id].username=username;
-  db[user_id].cheese=cheese;
-  db[user_id].multiplier=multiplier;
-  db[user_id].farmers=farmers;
-  saveDB();
-  res.send({total:db[user_id].cheese});
+document.getElementById("addBtn").addEventListener("click", async()=>{
+  const password=document.getElementById("password").value;
+  const amount=parseInt(document.getElementById("amount").value);
+  const res=await fetch("/admin/change",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({password,amount}) });
+  const data=await res.json();
+  document.getElementById("result").innerText=JSON.stringify(data);
+  fetchTop();
 });
-
-// Додати/забрати сир усім
-app.post("/admin/change",async(req,res)=>{
-  const {password,amount}=req.body;
-  const match=await bcrypt.compare(password,process.env.ADMIN_PASS_HASH);
-  if(!match) return res.status(403).send({error:"Wrong password"});
-  for(let u in db) db[u].cheese+=amount;
-  saveDB();
-  res.send({success:true,changed:amount});
-});
-
-// Топ гравців
-app.get("/top",(req,res)=>{
-  let arr=Object.entries(db).map(([id,u])=>u);
-  arr.sort((a,b)=>b.cheese-a.cheese);
-  res.send(arr);
-});
-
-// Завантажити стан конкретного гравця
-app.get("/player/:id",(req,res)=>{
-  const id=req.params.id;
-  if(db[id]) res.send(db[id]);
-  else res.send({cheese:0,multiplier:1,farmers:0});
-});
-
-app.listen(3000,()=>console.log("Server running http://localhost:3000"));
+</script>
+</body>
+</html>
